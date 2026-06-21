@@ -71,6 +71,10 @@ export const uploadFile = async (
   file: any,
   folder: "customers" | "fishes" | "staffs" | "doctors",
 ) => {
+  if (!storage) {
+    throw new Error("Firebase Storage chưa được cấu hình (VITE_BASE_apiKey trống).");
+  }
+
   const compressedFile: any = await handleResize(file);
 
   const fileName = replaceName(compressedFile.name);

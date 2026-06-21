@@ -23,6 +23,10 @@ const SocialButton = (props: Props) => {
   const handleLoginWithGoogle = async () => {
     try {
       onLoginStart?.();
+      if (!auth) {
+        message.error("Firebase chưa được cấu hình.");
+        return;
+      }
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 

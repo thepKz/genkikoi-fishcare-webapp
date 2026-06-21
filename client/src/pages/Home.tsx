@@ -1,24 +1,42 @@
 import { Avatar, Button, message, Rate, Spin } from "antd";
-import { ArrowLeft2, ArrowRight2, Calendar, Call, EmojiHappy, Heart, HeartTick, Moneys, Profile2User, Star, User } from "iconsax-react";
+import {
+  Activity,
+  ArrowLeft2,
+  ArrowRight2,
+  Award,
+  Calendar,
+  Call,
+  Drop,
+  EmojiHappy,
+  Heart,
+  HeartTick,
+  Hospital,
+  Microscope,
+  Moneys,
+  Profile2User,
+  ShieldTick,
+  Star,
+  User,
+} from "iconsax-react";
 import Carousel from "react-multi-carousel";
 import "react-multi-carousel/lib/styles.css";
-import Background from "../assets/background.webp";
-
-import Image2 from "../assets/Image1.jpg";
-import Image1 from "../assets/Image2.jpg";
-import Image3 from "../assets/Image3.jpg";
-
-
-import Fish1 from "../assets/fish-care-1.jpg";
-import Fish2 from "../assets/fish-care-2.webp";
-import Fish3 from "../assets/fish-care-3.jpg";
-import Fish4 from "../assets/fish-care-4.jpg";
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { handleAPI } from "../apis/handleAPI";
-import FishBanner from "../assets/fish-banner.png";
+import { KOI_IMG } from "../mocks/mockData";
 import { AnimatedSection, DividerComponent } from "../share";
+
+// Ảnh chủ đề cá Koi / hồ nước (Unsplash, cố định theo photo id).
+const Background = KOI_IMG.hero3;
+const Image1 = KOI_IMG.hero1;
+const Image2 = KOI_IMG.hero2;
+const Image3 = KOI_IMG.hero3;
+const Fish1 = KOI_IMG.gallery1;
+const Fish2 = KOI_IMG.gallery2;
+const Fish3 = KOI_IMG.gallery3;
+const Fish4 = KOI_IMG.gallery4;
+const FishBanner = KOI_IMG.hero1;
 
 const responsive = {
   desktop: {
@@ -70,7 +88,7 @@ const Home = () => {
           alt=""
         />
         {/* Overlay layer */}
-        <div className="absolute inset-0 bg-[#0C3C54] opacity-80"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0C3C54]/95 via-[#0C3C54]/85 to-[#175670]/80"></div>
       </div>
 
       {/* Banner Container */}
@@ -84,8 +102,14 @@ const Home = () => {
             }}
             className="w-3/6 rounded-lg bg-opacity-50 p-6"
           >
-            <h1 className="heading-1 mb-4 text-4xl font-bold">Hơn cả sự hài lòng.</h1>
-            <p className="py-4 text-justify text-base">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm backdrop-blur-sm">
+              <Drop size={16} variant="Bold" color="#f7776d" />
+              Phòng khám thú y chuyên cá Koi
+            </div>
+            <h1 className="heading-1 mb-4 text-5xl font-bold leading-tight">
+              Hơn cả <span className="text-[#f7776d]">sự hài lòng</span>.
+            </h1>
+            <p className="max-w-[60ch] py-4 text-justify text-base text-gray-100">
               GenKiKoi là tập thể những người trẻ, đầy nhiệt huyết và giàu kinh nghiệm trong lĩnh
               vực điều trị và chăm sóc cho cá Koi. <br />
               Tôn chỉ của chúng tôi là Uy tín – Chất lượng – Tận tâm.
@@ -322,57 +346,69 @@ const Home = () => {
             }}
           >
             <div className="mb-16 text-center">
-              <h1 className="mb-6 text-4xl font-bold">Đầy đủ dịch vụ cho thú cưng của bạn</h1>
-              <div className="flex items-center justify-center gap-2">
-                <div className="relative"></div>
-              </div>
+              <h1 className="mb-6 text-4xl font-bold">Đầy đủ dịch vụ cho cá Koi của bạn</h1>
+              <div className="mx-auto h-1 w-24 rounded-full bg-[#f7776d]"></div>
             </div>
 
             <div className="grid gap-8 md:grid-cols-2">
               {[
                 {
-                  icon: "🏥",
-                  title: "Tư vấn & Điều trị",
+                  Icon: Hospital,
+                  accent: "#f7776d",
+                  title: "Khám & điều trị bệnh cá Koi",
                   description:
-                    "Với kinh nghiệm của bác sĩ trình độ chuyên môn cao, nhiều năm kinh nghiệm làm việc tại Sài Gòn.",
+                    "Đội ngũ bác sĩ thú y chuyên về cá Koi, nhiều năm kinh nghiệm chẩn đoán và điều trị các bệnh thường gặp trên Koi.",
                 },
                 {
-                  icon: "🔬",
-                  title: "Xét nghiệm",
-                  description: "Bao gồm xét nghiệm máu và xét nghiệm ký sinh trùng máu.",
-                },
-                {
-                  icon: "📱",
-                  title: "Siêu âm",
-                  description: "Gồm có siêu âm thai và siêu âm giúp phát hiện các bệnh ở mô mềm.",
-                },
-                {
-                  icon: "⚕️",
-                  title: "Phẫu thuật",
-                  description: "Đem lại những điều an toàn nhất cho thú cưng của bạn.",
-                },
-                {
-                  icon: "💉",
-                  title: "Tiêm ngừa",
+                  Icon: Drop,
+                  accent: "#406ff4",
+                  title: "Kiểm tra chất lượng nước hồ",
                   description:
-                    "Tiêm chủng vắc xin là biện pháp phòng bệnh truyền nhiễm đơn giản và hiệu quả nhất hiện nay.",
+                    "Đo và phân tích các chỉ số nước (pH, NH3, NO2, O2...), tư vấn cân bằng môi trường hồ nuôi Koi.",
                 },
                 {
-                  icon: "🏪",
-                  title: "Pet Shop",
+                  Icon: Microscope,
+                  accent: "#2ed67b",
+                  title: "Xét nghiệm nước & ký sinh trùng",
                   description:
-                    "Chúng tôi cung cấp những mặt hàng thiết yếu nhất cho thú cưng của bạn.",
+                    "Soi mẫu da, mang và nước hồ để phát hiện ký sinh trùng, vi khuẩn và nấm gây bệnh cho cá Koi.",
+                },
+                {
+                  Icon: ShieldTick,
+                  accent: "#5756d6",
+                  title: "Tiêm vaccine phòng bệnh cho cá",
+                  description:
+                    "Tiêm phòng và xử lý dự phòng giúp đàn Koi tăng đề kháng, giảm rủi ro dịch bệnh theo mùa.",
+                },
+                {
+                  Icon: Activity,
+                  accent: "#f7776d",
+                  title: "Tiểu phẫu & xử lý vết thương cá",
+                  description:
+                    "Xử lý vết loét, vết thương ngoài da và các tiểu phẫu an toàn, hồi phục nhanh cho cá Koi.",
+                },
+                {
+                  Icon: Award,
+                  accent: "#406ff4",
+                  title: "Tư vấn dinh dưỡng cho Koi",
+                  description:
+                    "Tư vấn chế độ ăn theo mùa và theo độ tuổi giúp Koi lên màu đẹp, khỏe mạnh và phát triển tốt.",
                 },
               ].map((service, index) => (
                 <div
                   key={index}
-                  className="rounded-xl bg-white/10 p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:transform hover:bg-white/20 hover:shadow-xl"
+                  className="group rounded-xl border border-white/10 bg-white/[0.06] p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-white/10 hover:shadow-xl"
                 >
                   <div className="flex items-start gap-4">
-                    <div className="text-4xl">{service.icon}</div>
+                    <div
+                      className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-lg transition-transform duration-300 group-hover:scale-110"
+                      style={{ backgroundColor: service.accent }}
+                    >
+                      <service.Icon size={28} variant="Bold" color="#fff" />
+                    </div>
                     <div className="flex-1">
-                      <h2 className="mb-2 text-2xl font-bold">{service.title}</h2>
-                      <p className="leading-relaxed text-gray-100">{service.description}</p>
+                      <h2 className="mb-2 text-xl font-bold">{service.title}</h2>
+                      <p className="leading-relaxed text-gray-200">{service.description}</p>
                     </div>
                   </div>
                 </div>
@@ -594,7 +630,7 @@ const Home = () => {
             </h1>
             <div className="flex justify-center gap-2">
               <p className="text-xl">
-                Hãy để chúng tôi thay mặt bạn mang đến cho thú cưng những điều tốt đẹp nhất.
+                Hãy để chúng tôi thay mặt bạn mang đến cho đàn cá Koi những điều tốt đẹp nhất.
               </p>
             </div>
           </AnimatedSection>
@@ -652,9 +688,9 @@ const Home = () => {
                       Tận tâm
                     </h3>
                     <p className="leading-relaxed text-gray-100">
-                      Chúng tôi hiu rằng bên cạnh chất lượng điều trị thì chính sự nỗ lực từ trong
-                      tâm sẽ là liều thuốc tinh thần mạnh mẽ nhất dành cho những bạn nhỏ khi đến với
-                      GenKiKoi.
+                      Chúng tôi hiểu rằng bên cạnh chất lượng điều trị thì chính sự nỗ lực từ trong
+                      tâm sẽ là liều thuốc tinh thần mạnh mẽ nhất dành cho những chú cá Koi khi đến
+                      với GenKiKoi.
                     </p>
                   </div>
                 </div>
