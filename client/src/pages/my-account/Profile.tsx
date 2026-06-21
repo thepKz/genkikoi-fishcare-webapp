@@ -29,7 +29,7 @@ const Profile = () => {
 
   const dispatch = useDispatch();
 
-  const inpRef = useRef<any>();
+  const inpRef = useRef<any>(null);
 
   const [file, setFile] = useState(null);
 

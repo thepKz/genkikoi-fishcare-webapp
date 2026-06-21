@@ -74,6 +74,18 @@
   color: white !important;
 }
 
+.feedback-carousel.react-multi-carousel-list {
+  overflow: visible;
+}
+
+.feedback-carousel .react-multi-carousel-track {
+  align-items: stretch;
+}
+
+.feedback-carousel .react-multi-carousel-item {
+  display: flex;
+}
+
 /* Ant Design */
 .ant-menu-inline {
   border-inline-end: none !important;

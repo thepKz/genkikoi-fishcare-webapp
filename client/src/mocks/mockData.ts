@@ -1,18 +1,13 @@
 // Mock data cho chế độ FE-only (backend đã ngừng hoạt động).
-// Chủ đề: tiệm thú y chuyên cá Koi.
+// Chủ đề: tiệm thú y chuyên cá Koi. Ảnh dùng asset local có sẵn.
 
-export const KOI_IMG = {
-  hero1: "https://images.unsplash.com/photo-1535591273668-578e31182c4f?auto=format&fit=crop&w=800&q=80",
-  hero2: "https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?auto=format&fit=crop&w=800&q=80",
-  hero3: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80",
-  gallery1: "https://images.unsplash.com/photo-1535591273668-578e31182c4f?auto=format&fit=crop&w=600&q=80",
-  gallery2: "https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?auto=format&fit=crop&w=600&q=80",
-  gallery3: "https://images.unsplash.com/photo-1571752726703-5e7d1f6a986d?auto=format&fit=crop&w=600&q=80",
-  gallery4: "https://images.unsplash.com/photo-1524704796725-9fc3044a58b2?auto=format&fit=crop&w=600&q=80",
-};
-
-const AVATAR = (seed: string) =>
-  `https://i.pravatar.cc/150?u=${encodeURIComponent(seed)}`;
+import avatar1 from "../assets/avatar1.png";
+import avatar2 from "../assets/avatar2.png";
+import avatar3 from "../assets/avatar3.png";
+import avatar4 from "../assets/avatar4.png";
+import doctor1 from "../assets/doctor-1.jpg";
+import doctor2 from "../assets/doctor-2.jpg";
+import doctor3 from "../assets/doctor-3.jpg";
 
 export const mockFeedbacks = [
   {
@@ -21,7 +16,7 @@ export const mockFeedbacks = [
       "Cá Koi nhà mình bị nấm mang, đưa tới GenKiKoi điều trị 1 tuần là khỏe lại hẳn. Bác sĩ tận tâm, theo dõi sát.",
     serviceName: "Khám & điều trị bệnh cá Koi",
     customerName: "Nguyễn Minh Quân",
-    customerAvatar: AVATAR("quan"),
+    customerAvatar: avatar1,
     feedbackDate: "2026-05-12",
   },
   {
@@ -30,7 +25,7 @@ export const mockFeedbacks = [
       "Dịch vụ kiểm tra chất lượng nước rất chuyên nghiệp, có báo cáo chỉ số chi tiết và hướng dẫn cân bằng hồ.",
     serviceName: "Kiểm tra chất lượng nước hồ",
     customerName: "Trần Thị Hồng",
-    customerAvatar: AVATAR("hong"),
+    customerAvatar: avatar2,
     feedbackDate: "2026-04-28",
   },
   {
@@ -39,7 +34,7 @@ export const mockFeedbacks = [
       "Tiêm vaccine phòng bệnh cho đàn Koi 12 con, quy trình nhẹ nhàng, cá không bị stress nhiều. Sẽ quay lại.",
     serviceName: "Tiêm vaccine phòng bệnh cho cá",
     customerName: "Lê Hoàng Phúc",
-    customerAvatar: AVATAR("phuc"),
+    customerAvatar: avatar3,
     feedbackDate: "2026-04-15",
   },
   {
@@ -48,7 +43,7 @@ export const mockFeedbacks = [
       "Koi bị ký sinh trùng, ngứa cọ mình liên tục. Sau khi xét nghiệm và điều trị thì hết hẳn. Cảm ơn đội ngũ!",
     serviceName: "Xét nghiệm nước & ký sinh trùng",
     customerName: "Phạm Anh Tú",
-    customerAvatar: AVATAR("tu"),
+    customerAvatar: avatar4,
     feedbackDate: "2026-03-30",
   },
   {
@@ -57,7 +52,7 @@ export const mockFeedbacks = [
       "Được tư vấn dinh dưỡng và chế độ ăn theo mùa cho Koi, màu cá lên đẹp hơn rõ rệt sau 2 tháng.",
     serviceName: "Tư vấn dinh dưỡng cho Koi",
     customerName: "Đỗ Quang Dũng",
-    customerAvatar: AVATAR("dung"),
+    customerAvatar: avatar1,
     feedbackDate: "2026-03-10",
   },
 ];
@@ -69,7 +64,7 @@ export const mockDoctors = [
     specialization: "Bệnh học cá Koi",
     yearOfExperience: 8,
     movingService: true,
-    image: AVATAR("doc-thep"),
+    image: doctor1,
   },
   {
     _id: "doc2",
@@ -77,7 +72,7 @@ export const mockDoctors = [
     specialization: "Ký sinh trùng & chất lượng nước",
     yearOfExperience: 6,
     movingService: false,
-    image: AVATAR("doc-hong"),
+    image: doctor2,
   },
   {
     _id: "doc3",
@@ -85,7 +80,7 @@ export const mockDoctors = [
     specialization: "Dinh dưỡng & phục hồi cá Koi",
     yearOfExperience: 5,
     movingService: true,
-    image: AVATAR("doc-hanh"),
+    image: doctor3,
   },
 ];
 
@@ -106,6 +101,6 @@ export const mockProfile = {
   email: "demo@genkikoi.dev",
   phoneNumber: "0888500703",
   gender: "male",
-  photoUrl: AVATAR("demo"),
+  photoUrl: avatar1,
   address: "Quận 1, TP. Hồ Chí Minh",
 };

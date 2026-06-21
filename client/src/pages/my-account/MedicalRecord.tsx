@@ -26,7 +26,7 @@ import { GiCirclingFish } from "react-icons/gi";
 const { TextArea } = Input;
 
 const MedicalRecord = () => {
-  const inpRef = useRef<any>();
+  const inpRef = useRef<any>(null);
   const [form] = Form.useForm();
   const [file, setFile] = useState(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
