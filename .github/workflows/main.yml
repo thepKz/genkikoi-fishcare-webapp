@@ -149,7 +149,7 @@ jobs:
       
   # CLIENT Job to deploy the application to the staging environment
   deploy-staging:
-    if: github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: staging
     steps:
