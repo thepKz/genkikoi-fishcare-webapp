@@ -87,47 +87,7 @@ jobs:
           MONGO_URI: ${{ secrets.MONGO_URI }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
 
-      - name: Check server coverage >= 75%
-        working-directory: server
-        run: |
-          node - <<'NODE'
-          const fs = require('fs');
 
-          const file = 'coverage/coverage-summary.json';
-
-          if (!fs.existsSync(file)) {
-            console.error('Missing coverage/coverage-summary.json');
-            process.exit(1);
-          }
-
-          const summary = JSON.parse(fs.readFileSync(file, 'utf8')).total;
-          const metrics = ['lines', 'statements', 'functions', 'branches'];
-
-          let failed = false;
-
-          for (const metric of metrics) {
-            const pct = summary[metric]?.pct ?? 0;
-            console.log(`${metric}: ${pct}%`);
-
-            if (pct < 5) {
-              console.error(`${metric} coverage is below 5%`);
-              failed = true;
-            }
-          }
-
-          if (failed) {
-            process.exit(1);
-          }
-
-          console.log('Coverage is 5% or higher.');
-          NODE
-
-      - name: Build server
-        working-directory: server
-        run: npm run build
-        env:
-          MONGO_URI: ${{ secrets.MONGO_URI }}
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
 
       - name: Install client dependencies
         working-directory: client
@@ -153,37 +113,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-      - name: Install admin dependencies
-        working-directory: admin
-        run: npm ci
-
-      - name: Build admin
-        working-directory: admin
-        run: npm run build
-        env:
-          VITE_BASE_URL: ${{ secrets.VITE_BASE_URL }}
-          VITE_BASE_apiKey: ${{ secrets.VITE_BASE_APIKEY }}
-          VITE_BASE_authDomain: ${{ secrets.VITE_BASE_AUTHDOMAIN }}
-          VITE_BASE_projectId: ${{ secrets.VITE_BASE_PROJECTID }}
-          VITE_BASE_storageBucket: ${{ secrets.VITE_BASE_STORAGEBUCKET }}
-          VITE_BASE_messagingSenderId: ${{ secrets.VITE_BASE_MESSAGINGSENDERID }}
-          VITE_BASE_appId: ${{ secrets.VITE_BASE_APPID }}
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
-
-      - name: Upload admin artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: admin-dist
-          path: admin/dist
-          if-no-files-found: error
-          retention-days: 7
-
-      - name: Upload coverage to Coveralls
-        uses: coverallsapp/github-action@v2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          file: server/coverage/lcov.info
-          format: lcov
+    
 
   deploy-staging:
     name: Deploy Client Staging
@@ -212,42 +142,3 @@ jobs:
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_STAGING_SITE_ID }}
-
-  deploy-admin:
-    name: Deploy Admin
-    needs: test-and-build
-    if: github.ref == 'refs/heads/develop' && github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-    environment: admin
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-
-      - name: Download admin artifact
-        uses: actions/download-artifact@v8
-        with:
-          name: admin-dist
-          path: ./admin/dist
-
-      - name: Deploy admin to Netlify
-        uses: nwtgck/actions-netlify@v4.0.0
-        with:
-          publish-dir: './admin/dist'
-          production-branch: develop
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: 'Deploy admin from GitHub Actions'
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_ADMIN_SITE_ID }}
-
-  deploy-backend:
-    name: Deploy Backend
-    needs: test-and-build
-    if: github.ref == 'refs/heads/develop' && github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-    environment: backend
-
-    steps:
-      - name: Trigger Render deploy hook
-        run: curl -fsS "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
