@@ -1,110 +1,141 @@
-# CI/CD for Admin page and Client Page bonus Backend Page
 name: CI/CD
 
 on:
   push:
-    branches: [ main, develop, feature/* ]
+    branches:
+      - main
+      - develop
+      - 'feature/**'
     paths:
       - '**/*.tsx'
       - '**/*.ts'
       - '**/*.js'
       - '**/*.json'
-      - 'vite.config.*'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'client/**'
-      - 'server/**'
-      - 'admin/**'
       - '**/*.xml'
       - '**/*.yml'
-  pull_request:
-    branches: [ main, develop ]
-    paths:
-      - '**/*.tsx'
-      - '**/*.ts'
-      - '**/*.js'
-      - '**/*.json'
+      - '**/*.yaml'
       - 'vite.config.*'
       - 'package.json'
       - 'package-lock.json'
       - 'client/**'
       - 'server/**'
       - 'admin/**'
+      - '.github/workflows/**'
+
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - '**/*.tsx'
+      - '**/*.ts'
+      - '**/*.js'
+      - '**/*.json'
+      - '**/*.xml'
+      - '**/*.yml'
+      - '**/*.yaml'
+      - 'vite.config.*'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'client/**'
+      - 'server/**'
+      - 'admin/**'
+      - '.github/workflows/**'
+
   workflow_dispatch:
+
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+  checks: write
+  pull-requests: write
+  statuses: write
+  deployments: write
 
 jobs:
   test-and-build:
+    name: Test and Build
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v7
 
-      - name: Use Node.js
-        uses: actions/setup-node@v3
+      - name: Use Node.js 24 LTS
+        uses: actions/setup-node@v6
         with:
-          node-version: '18'
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            server/package-lock.json
+            client/package-lock.json
+            admin/package-lock.json
 
-      - name: Clear npm cache
-        run: npm cache clean --force
+      - name: Install server dependencies
+        working-directory: server
+        run: npm ci
 
-      - name: Remove node_modules and package-lock.json
+      - name: Run server tests with coverage
+        working-directory: server
         run: |
-          rm -rf node_modules
-          rm -f package-lock.json
-
-      - name: Install dependencies and build server
-        run: |
-          cd server
-          npm ci
-          npm install --save-dev copyfiles
-          npm run build
+          npm run test -- --coverage --coverageReporters=lcov --coverageReporters=json-summary
         env:
           MONGO_URI: ${{ secrets.MONGO_URI }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
 
-      - name: Run server tests and generate report
+      - name: Check server coverage >= 75%
+        working-directory: server
         run: |
-          cd server
-          npm run test -- --coverage --coverageReporters=text-lcov > coverage.lcov
-        env:
-          MONGO_URI: ${{ secrets.MONGO_URI }}
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-
-      - name: Check test results in server ( NEED >= 75%)
-        run: |
-          cd server
-          node -e "
+          node - <<'NODE'
           const fs = require('fs');
-          const xml2js = require('xml2js');
-          const parser = new xml2js.Parser();
-          const xml = fs.readFileSync('./jest-results.xml', 'utf8');
-          
-          parser.parseString(xml, (err, result) => {
-            if (err) {
-              console.error('Error parsing XML');
-              process.exit(1);
-            }
-            
-            const totalTests = result.testsuites.$.tests;
-            const failedTests = result.testsuites.$.failures;
-            
-            console.log('Total tests:', totalTests);
-            console.log('Failed tests:', failedTests);
-            
-            if ((totalTests - failedTests) / totalTests < 0.75) {
-              console.error('Less than 75% of tests passed');
-              process.exit(1);
-            } else {
-              console.log('75% or more of tests passed');
-            }
-          });
-          "
 
-      - name: Install dependencies and build client
-        run: |
-          cd client
-          npm ci
-          npm run build
+          const file = 'coverage/coverage-summary.json';
+
+          if (!fs.existsSync(file)) {
+            console.error('Missing coverage/coverage-summary.json');
+            process.exit(1);
+          }
+
+          const summary = JSON.parse(fs.readFileSync(file, 'utf8')).total;
+          const metrics = ['lines', 'statements', 'functions', 'branches'];
+
+          let failed = false;
+
+          for (const metric of metrics) {
+            const pct = summary[metric]?.pct ?? 0;
+            console.log(`${metric}: ${pct}%`);
+
+            if (pct < 75) {
+              console.error(`${metric} coverage is below 75%`);
+              failed = true;
+            }
+          }
+
+          if (failed) {
+            process.exit(1);
+          }
+
+          console.log('Coverage is 75% or higher.');
+          NODE
+
+      - name: Build server
+        working-directory: server
+        run: npm run build
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+
+      - name: Install client dependencies
+        working-directory: client
+        run: npm ci
+
+      - name: Build client
+        working-directory: client
+        run: npm run build
         env:
           VITE_BASE_apiKey: ${{ secrets.VITE_BASE_APIKEY }}
           VITE_BASE_authDomain: ${{ secrets.VITE_BASE_AUTHDOMAIN }}
@@ -114,17 +145,21 @@ jobs:
           VITE_BASE_appId: ${{ secrets.VITE_BASE_APPID }}
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
-      - name: Upload artifact client
-        uses: actions/upload-artifact@v3
+      - name: Upload client artifact
+        uses: actions/upload-artifact@v7
         with:
           name: client-dist
           path: client/dist
+          if-no-files-found: error
+          retention-days: 7
 
-      - name: Install dependencies and build admin
-        run: |
-          cd admin
-          npm ci
-          npm run build
+      - name: Install admin dependencies
+        working-directory: admin
+        run: npm ci
+
+      - name: Build admin
+        working-directory: admin
+        run: npm run build
         env:
           VITE_BASE_URL: ${{ secrets.VITE_BASE_URL }}
           VITE_BASE_apiKey: ${{ secrets.VITE_BASE_APIKEY }}
@@ -135,113 +170,83 @@ jobs:
           VITE_BASE_appId: ${{ secrets.VITE_BASE_APPID }}
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
+      - name: Upload admin artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: admin-dist
+          path: admin/dist
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: server/coverage.lcov
+          file: server/coverage/lcov.info
+          format: lcov
 
-      - name: Upload artifact admin
-        uses: actions/upload-artifact@v3
-        with:
-          name: admin-dist
-          path: admin/dist
-      
-  # CLIENT Job to deploy the application to the staging environment
   deploy-staging:
-    if: github.ref == 'refs/heads/main'
+    name: Deploy Client Staging
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment: staging
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Download artifact
-        uses: actions/download-artifact@v3
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Download client artifact
+        uses: actions/download-artifact@v8
         with:
           name: client-dist
           path: ./client/dist
 
-      - name: Deploy to Netlify (Staging)
-        uses: nwtgck/actions-netlify@v2.0
+      - name: Deploy client to Netlify staging
+        uses: nwtgck/actions-netlify@v4.0.0
         with:
           publish-dir: './client/dist'
           production-branch: develop
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: "Deploy to staging from GitHub Actions"
+          deploy-message: 'Deploy client staging from GitHub Actions'
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_STAGING_SITE_ID }}
 
-  # # CLIENT PRODUCTION Job to deploy the application to the production environment
-  # deploy-production:
-  #   needs: test-and-build
-  #   if: github.ref == 'refs/heads/main'
-  #   runs-on: ubuntu-latest
-  #   environment: production
-  #   steps:
-  #     - uses: actions/checkout@v4
-
-  #     - name: Download artifact
-  #       uses: actions/download-artifact@v3
-  #       with:
-  #         name: client-dist
-  #         path: ./client/dist
-
-  #     - name: Deploy to Netlify (Production)
-  #       uses: nwtgck/actions-netlify@v2.0
-  #       with:
-  #         publish-dir: './client/dist'
-  #         production-branch: main
-  #         github-token: ${{ secrets.GITHUB_TOKEN }}
-  #         deploy-message: "Deploy to production from GitHub Actions"
-  #       env:
-  #         NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-  #         NETLIFY_SITE_ID: ${{ secrets.NETLIFY_PRODUCTION_SITE_ID }}
-
-  # ADMIN Job to deploy the application to the admin environment
   deploy-admin:
+    name: Deploy Admin
     needs: test-and-build
-    if: github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/develop' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment: admin
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Download artifact
-        uses: actions/download-artifact@v3
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Download admin artifact
+        uses: actions/download-artifact@v8
         with:
           name: admin-dist
           path: ./admin/dist
 
-      - name: Deploy to Netlify (Admin)
-        uses: nwtgck/actions-netlify@v2.0
+      - name: Deploy admin to Netlify
+        uses: nwtgck/actions-netlify@v4.0.0
         with:
           publish-dir: './admin/dist'
           production-branch: develop
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: "Deploy to admin from GitHub Actions"
+          deploy-message: 'Deploy admin from GitHub Actions'
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_ADMIN_SITE_ID }}
 
-  # Job to deploy the backend to Render
   deploy-backend:
-    needs: [test-and-build]
-    if: github.ref == 'refs/heads/develop'
+    name: Deploy Backend
+    needs: test-and-build
+    if: github.ref == 'refs/heads/develop' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    environment: backend
+
     steps:
-      - name: Deploy to Render
-        run: curl ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
-        env:
-          PORT: 5000
-          MONGO_URI: ${{ secrets.MONGO_URI }}
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          OPENAI_URL: ${{ secrets.OPENAI_URL }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
-          CLIENT_ID: ${{ secrets.CLIENT_ID }}
-          API_KEY: ${{ secrets.API_KEY }}
-          CHECKSUM_KEY: ${{ secrets.CHECKSUM_KEY }}
-          BASE_URL_CANCELLED_PAYMENT: ${{ secrets.BASE_URL_CANCELLED_PAYMENT }}
-          BASE_URL_SUCCESS_PAYMENT: ${{ secrets.BASE_URL_SUCCESS_PAYMENT }}
-          API_URL: ${{ secrets.API_URL }}
+      - name: Trigger Render deploy hook
+        run: curl -fsS "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
